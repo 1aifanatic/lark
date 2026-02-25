@@ -1,0 +1,73 @@
+{
+  "manifest_version": 3,
+  "name": "LLM Content Extractor",
+  "version": "1.0.0",
+  "description": "Extract webpage URLs or YouTube transcripts and send them to your favorite LLM with custom prompts",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://www.youtube.com/*",
+    "https://youtube.com/*",
+    "https://youtu.be/*",
+    "https://chat.openai.com/*",
+    "https://chatgpt.com/*",
+    "https://gemini.google.com/*",
+    "https://x.com/i/grok*",
+    "https://grok.com/*",
+    "https://claude.ai/*",
+    "https://www.kimi.com/*",
+    "https://kimi.com/*",
+    "https://chat.deepseek.com/*",
+    "https://chat.qwen.ai/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "options_page": "options.html",
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.youtube.com/*",
+        "https://youtube.com/*"
+      ],
+      "js": ["youtube-extractor.js"],
+      "run_at": "document_end"
+    },
+    {
+      "matches": [
+        "https://chat.openai.com/*",
+        "https://chatgpt.com/*",
+        "https://gemini.google.com/*",
+        "https://x.com/i/grok*",
+        "https://grok.com/*",
+        "https://claude.ai/*",
+        "https://www.kimi.com/*",
+        "https://kimi.com/*",
+        "https://chat.deepseek.com/*",
+        "https://chat.qwen.ai/*"
+      ],
+      "js": ["llm-injector.js"],
+      "run_at": "document_end"
+    }
+  ]
+}
+
