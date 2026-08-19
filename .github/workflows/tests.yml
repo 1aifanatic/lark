@@ -1,0 +1,40 @@
+name: tests
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # No install step on purpose: LARK has no dependencies and no build.
+      - name: Syntax check every script
+        run: for f in *.js; do node --check "$f"; done
+
+      - name: Manifest parses
+        run: node -e "JSON.parse(require('fs').readFileSync('manifest.json','utf8'))"
+
+      - name: Domain module tests
+        run: node architecture-tests.mjs
+
+      - name: Side panel startup and Skill selection
+        run: node sidepanel-startup-test.mjs
+
+      - name: Manifest and runtime integration
+        run: node verify.mjs
+
+      - name: Icons match icons/lark.svg
+        run: |
+          node create-icons.js
+          git diff --exit-code -- icons/ || {
+            echo "icons/ is out of date — run 'node create-icons.js' and commit the result"
+            exit 1
+          }

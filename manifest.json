@@ -1,13 +1,15 @@
 {
   "manifest_version": 3,
-  "name": "LLM Content Extractor",
-  "version": "1.0.0",
-  "description": "Extract webpage URLs or YouTube transcripts and send them to your favorite LLM with custom prompts",
+  "name": "LARK",
+  "version": "1.4.0",
+  "description": "LLM Article Relay Kit — send any page, article or YouTube transcript to twelve AI chats at once, with your own prompt and skills",
   "permissions": [
     "activeTab",
     "storage",
     "scripting",
-    "tabs"
+    "tabs",
+    "contextMenus",
+    "sidePanel"
   ],
   "host_permissions": [
     "https://www.youtube.com/*",
@@ -22,16 +24,27 @@
     "https://www.kimi.com/*",
     "https://kimi.com/*",
     "https://chat.deepseek.com/*",
-    "https://chat.qwen.ai/*"
+    "https://chat.qwen.ai/*",
+    "https://www.perplexity.ai/*",
+    "https://perplexity.ai/*",
+    "https://poe.com/*",
+    "https://chat.mistral.ai/*",
+    "https://huggingface.co/chat/*",
+    "https://copilot.microsoft.com/*",
+    "https://api.github.com/*",
+    "https://github.com/*",
+    "<all_urls>"
   ],
   "action": {
-    "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon16.png",
       "32": "icons/icon32.png",
       "48": "icons/icon48.png",
       "128": "icons/icon128.png"
     }
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
   },
   "icons": {
     "16": "icons/icon16.png",
@@ -43,13 +56,22 @@
   "background": {
     "service_worker": "background.js"
   },
+  "commands": {
+    "extract-send": {
+      "suggested_key": {
+        "default": "Alt+Shift+X",
+        "mac": "Alt+Shift+X"
+      },
+      "description": "Extract the current page and send it to your selected LLMs"
+    }
+  },
   "content_scripts": [
     {
       "matches": [
         "https://www.youtube.com/*",
         "https://youtube.com/*"
       ],
-      "js": ["youtube-extractor.js"],
+      "js": ["send-run.js", "youtube-extractor.js"],
       "run_at": "document_end"
     },
     {
@@ -63,11 +85,16 @@
         "https://www.kimi.com/*",
         "https://kimi.com/*",
         "https://chat.deepseek.com/*",
-        "https://chat.qwen.ai/*"
+        "https://chat.qwen.ai/*",
+        "https://www.perplexity.ai/*",
+        "https://perplexity.ai/*",
+        "https://poe.com/*",
+        "https://chat.mistral.ai/*",
+        "https://huggingface.co/chat/*",
+        "https://copilot.microsoft.com/*"
       ],
-      "js": ["llm-injector.js"],
+      "js": ["platforms.js", "send-run.js", "llm-injector.js"],
       "run_at": "document_end"
     }
   ]
 }
-

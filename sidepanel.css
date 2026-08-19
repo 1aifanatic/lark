@@ -1,0 +1,960 @@
+/* LARK — side panel
+ *
+ * Visual language: warm paper surfaces, clay accent, hairline rules, serif display,
+ * no gradients or glow. Light-first with a full dark variant.
+ *
+ * Theme model: :root holds the light palette, the prefers-color-scheme block the
+ * system dark palette, and the html[data-theme] blocks force either one from the
+ * user's explicit choice (theme.js). The attribute selectors out-specify :root, so
+ * they win regardless of source order — that is what makes the toggle work.
+ *
+ * No webfont @import on purpose: system stacks render instantly and suit this
+ * aesthetic. Every colour pair below was contrast-audited before being written;
+ * ratios are noted where they sit close to a threshold.
+ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  color-scheme: light;
+
+  /* Surfaces — warm paper, not grey */
+  --bg-page: #F0EEE6;
+  --bg-surface: #FAF9F5;
+  --bg-card: #FFFFFF;
+  --bg-hover: #F0EEE6;
+
+  /* Ink */
+  --ink: #141413;            /* 15.87 on page */
+  --ink-secondary: #5C5B55;  /* 5.86 on page */
+  --ink-muted: #6E6C64;      /* 4.53 on page — at the AA floor, do not lighten */
+
+  /* Rules. hairline is decorative; hairline-strong marks editable fields and must
+     clear 3:1 non-text contrast (3.49 on surface). */
+  --hairline: #DEDBD0;
+  --hairline-strong: #8A8578;
+
+  /* Clay accent. --clay fills; --clay-ink is the darker tone for accent TEXT. */
+  --clay: #B85C38;
+  --clay-ink: #954625;       /* 5.53 on page; 5.11 on clay-wash over page */
+  --clay-hover: #954625;
+  --clay-wash: rgba(184, 92, 56, 0.09);
+  --on-clay: #FFFFFF;        /* 4.54 on clay */
+
+  --success: #2E6F4E;
+  --success-wash: rgba(46, 111, 78, 0.10);
+  --error: #A32B22;
+  --error-wash: rgba(163, 43, 34, 0.10);
+
+  --font-ui: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  --font-display: ui-serif, Georgia, 'Times New Roman', serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, monospace;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-pill: 999px;
+
+  --ease: cubic-bezier(0.2, 0, 0.2, 1);
+  --dur: 150ms;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-page: #1F1E1B;
+    --bg-surface: #262622;
+    --bg-card: #2C2B27;
+    --bg-hover: #34332E;
+
+    --ink: #F5F4EF;
+    --ink-secondary: #B8B5AC;
+    --ink-muted: #9C998F;
+
+    --hairline: #3A3833;
+    --hairline-strong: #7A776C;   /* 3.39 on surface */
+
+    --clay: #E08A6A;              /* lighter fill + dark ink = 6.36 */
+    --clay-ink: #E5947A;          /* 7.02 on page */
+    --clay-hover: #E9A088;
+    --clay-wash: rgba(224, 138, 106, 0.14);
+    --on-clay: #1F1E1B;
+
+    --success: #6FCF97;
+    --success-wash: rgba(111, 207, 151, 0.14);
+    --error: #F2938C;
+    --error-wash: rgba(242, 147, 140, 0.14);
+  }
+}
+
+/* Forced themes (user choice via theme.js). Identical palettes to the two blocks
+   above; the attribute selectors override :root even inside the media query. */
+html[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg-page: #1F1E1B;
+  --bg-surface: #262622;
+  --bg-card: #2C2B27;
+  --bg-hover: #34332E;
+
+  --ink: #F5F4EF;
+  --ink-secondary: #B8B5AC;
+  --ink-muted: #9C998F;
+
+  --hairline: #3A3833;
+  --hairline-strong: #7A776C;
+
+  --clay: #E08A6A;
+  --clay-ink: #E5947A;
+  --clay-hover: #E9A088;
+  --clay-wash: rgba(224, 138, 106, 0.14);
+  --on-clay: #1F1E1B;
+
+  --success: #6FCF97;
+  --success-wash: rgba(111, 207, 151, 0.14);
+  --error: #F2938C;
+  --error-wash: rgba(242, 147, 140, 0.14);
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
+
+  --bg-page: #F0EEE6;
+  --bg-surface: #FAF9F5;
+  --bg-card: #FFFFFF;
+  --bg-hover: #F0EEE6;
+
+  --ink: #141413;
+  --ink-secondary: #5C5B55;
+  --ink-muted: #6E6C64;
+
+  --hairline: #DEDBD0;
+  --hairline-strong: #8A8578;
+
+  --clay: #B85C38;
+  --clay-ink: #954625;
+  --clay-hover: #954625;
+  --clay-wash: rgba(184, 92, 56, 0.09);
+  --on-clay: #FFFFFF;
+
+  --success: #2E6F4E;
+  --success-wash: rgba(46, 111, 78, 0.10);
+  --error: #A32B22;
+  --error-wash: rgba(163, 43, 34, 0.10);
+}
+
+body {
+  /* The side panel is resizable by the user, so this fills whatever width it is given
+     rather than pinning one. The old 600px height cap that shaped this layout does not
+     apply to a panel — it is full browser height and scrolls normally. */
+  width: 100%;
+  min-width: 280px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  line-height: 1.5;
+  background: var(--bg-page);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+.container {
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ---- Header ---- */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.logo {
+  width: 28px;
+  height: 28px;
+  background: var(--clay);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--on-clay);
+  flex-shrink: 0;
+}
+
+.logo svg {
+  width: 17px;
+  height: 17px;
+}
+
+.header h1 {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+/* ---- Theme toggle ---- */
+
+.theme-toggle {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  color: var(--ink-secondary);
+  cursor: pointer;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease),
+              border-color var(--dur) var(--ease);
+}
+
+.theme-toggle:hover {
+  background: var(--bg-hover);
+  color: var(--ink);
+  border-color: var(--hairline-strong);
+}
+
+/* In light mode offer the moon; in dark mode the sun. Which one shows is driven by
+   the effective theme on <html>, which theme.js keeps in sync. */
+.icon-sun { display: none; }
+.icon-moon { display: block; }
+html[data-theme="dark"] .icon-sun { display: block; }
+html[data-theme="dark"] .icon-moon { display: none; }
+
+/* ---- Page info ---- */
+
+.page-info {
+  background: var(--bg-card);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.page-type { flex-shrink: 0; }
+
+.url-container {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+}
+
+.page-url {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-secondary);
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.type-badge.webpage {
+  background: var(--clay-wash);
+  color: var(--clay-ink);
+}
+
+.type-badge.youtube {
+  background: var(--error-wash);
+  color: var(--error);
+}
+
+.type-badge::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.copy-url-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  background: transparent;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  color: var(--ink-secondary);
+  cursor: pointer;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease),
+              border-color var(--dur) var(--ease);
+}
+
+.copy-url-btn:hover {
+  background: var(--bg-hover);
+  color: var(--ink);
+  border-color: var(--hairline-strong);
+}
+
+/* ---- Section headers (shared by LLM + Skills) ---- */
+
+.llm-selector,
+.skills-selector {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.llm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.llm-header label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-secondary);
+}
+
+.llm-counter {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-muted);
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--hairline);
+  transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease),
+              background var(--dur) var(--ease);
+}
+
+.llm-counter.active {
+  color: var(--clay-ink);
+  border-color: transparent;
+  background: var(--clay-wash);
+}
+
+.select-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* Text-weight actions — infrequent, and they should not compete with the CTA. */
+.select-btn {
+  padding: 3px 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--ink-muted);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+
+.select-btn:hover {
+  color: var(--ink);
+  background: var(--bg-hover);
+}
+
+/* ---- LLM checkboxes ---- */
+
+.llm-checkboxes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-1);
+  background: var(--bg-card);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  padding: var(--space-2);
+}
+
+.llm-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px;
+  min-height: 28px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--dur) var(--ease);
+}
+
+.llm-checkbox:hover { background: var(--bg-hover); }
+
+.llm-checkbox input[type="checkbox"] {
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  border: 1.5px solid var(--hairline-strong);
+  border-radius: 4px;
+  background: var(--bg-card);
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+
+.llm-checkbox input[type="checkbox"]:checked {
+  background: var(--clay);
+  border-color: var(--clay);
+}
+
+.llm-checkbox input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  top: 1px;
+  left: 4px;
+  width: 4px;
+  height: 8px;
+  border: solid var(--on-clay);
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+}
+
+/* Brand monogram chips. Decorative identity — the adjacent name is the accessible
+   label, so the chip is aria-hidden and brand colours are exempt from AA. */
+.llm-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-ui);
+  line-height: 1;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.llm-mark.chatgpt     { background: rgba(16, 163, 127, 0.15);   color: #10a37f; }
+.llm-mark.gemini      { background: rgba(66, 133, 244, 0.15);   color: #4285f4; }
+.llm-mark.claude      { background: rgba(193, 95, 60, 0.15);    color: #C15F3C; }
+.llm-mark.grok        { background: rgba(60, 59, 55, 0.15);     color: #3C3B37; }
+.llm-mark.deepseek    { background: rgba(77, 107, 254, 0.15);   color: #4D6BFE; }
+.llm-mark.kimi        { background: rgba(139, 92, 246, 0.15);   color: #8B5CF6; }
+.llm-mark.qwen        { background: rgba(236, 72, 153, 0.15);   color: #EC4899; }
+.llm-mark.perplexity  { background: rgba(32, 128, 141, 0.15);   color: #20808D; }
+.llm-mark.poe         { background: rgba(106, 76, 255, 0.15);   color: #6A4CFF; }
+.llm-mark.mistral     { background: rgba(247, 181, 0, 0.18);    color: #8a6200; }
+.llm-mark.huggingchat { background: rgba(255, 210, 30, 0.18);   color: #8a6d00; }
+.llm-mark.copilot     { background: rgba(75, 91, 252, 0.15);    color: #4B5BFC; }
+
+/* Dark-mode brand adjustments — the light-tuned inks above vanish on dark paper. */
+html[data-theme="dark"] .llm-mark.grok        { color: #E8E6DF; background: rgba(232, 230, 223, 0.14); }
+html[data-theme="dark"] .llm-mark.mistral     { color: #F7B500; }
+html[data-theme="dark"] .llm-mark.huggingchat { color: #FFD21E; }
+html[data-theme="dark"] .llm-mark.copilot     { color: #A5B4FC; }
+html[data-theme="dark"] .llm-mark.perplexity  { color: #4FB8C4; }
+html[data-theme="dark"] .llm-mark.deepseek    { color: #7E8CFE; }
+
+.checkbox-label {
+  font-size: 12px;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+/* ---- Skills ---- */
+
+.skill-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.skill-chip {
+  padding: 4px 10px;
+  min-height: 26px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-secondary);
+  background: var(--bg-card);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease),
+              border-color var(--dur) var(--ease);
+}
+
+.skill-chip:hover {
+  color: var(--ink);
+  border-color: var(--hairline-strong);
+}
+
+/* Selected state is a filled clay pill. Colour is not the only signal — aria-pressed
+   carries the state for assistive tech. */
+.skill-chip.active {
+  background: var(--clay);
+  border-color: var(--clay);
+  color: var(--on-clay);
+}
+
+.skill-chip.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.skill-chips .empty-note {
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+
+/* ---- Primary action ---- */
+
+.action-buttons {
+  display: flex;
+  gap: var(--space-2);
+  align-items: stretch;
+}
+
+.extract-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  flex: 1;
+  padding: 10px 14px;
+  background: var(--clay);
+  border: 1px solid var(--clay);
+  border-radius: var(--radius-md);
+  color: var(--on-clay);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+
+.extract-btn:hover:not(:disabled) {
+  background: var(--clay-hover);
+  border-color: var(--clay-hover);
+}
+
+.extract-btn:active:not(:disabled) {
+  filter: brightness(0.94);
+}
+
+.extract-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-icon { display: flex; }
+.btn-icon svg { width: 15px; height: 15px; }
+
+.keyboard-hint {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: inherit;
+}
+
+.copy-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  color: var(--ink-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease),
+              border-color var(--dur) var(--ease);
+}
+
+.copy-btn:hover {
+  background: var(--bg-hover);
+  color: var(--ink);
+  border-color: var(--hairline-strong);
+}
+
+/* ---- Status ---- */
+
+.status-container { display: none; }
+.status-container.visible { display: block; }
+
+.status {
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  text-align: left;
+}
+
+.status.success { background: var(--success-wash); color: var(--success); }
+.status.error   { background: var(--error-wash);   color: var(--error); }
+.status.info    { background: var(--clay-wash);    color: var(--clay-ink); }
+
+/* ---- Progress ---- */
+
+.progress-container { display: none; }
+.progress-container.visible { display: block; }
+
+.progress-bar {
+  height: 3px;
+  background: var(--hairline);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--clay);
+  border-radius: var(--radius-pill);
+  transition: width 300ms var(--ease);
+}
+
+.progress-text {
+  font-size: 11px;
+  color: var(--ink-muted);
+  margin-top: 6px;
+}
+
+/* ---- GitHub comparison ---- */
+/* No longer collapsible: in a panel it is a real section that shows up on GitHub and
+   hides everywhere else, so there is nothing to fold away. */
+
+.repo-compare,
+.keyboard-shortcuts {
+  background: var(--bg-card);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.repo-compare {
+  padding: 8px 10px 10px;
+}
+
+.repo-compare[hidden],
+.repo-reminder[hidden] { display: none; }
+
+.repo-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.repo-subhead {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  letter-spacing: 0.02em;
+  margin: 2px 0 0;
+}
+
+.repo-found,
+.repo-basket {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  /* Long listing pages can surface dozens of repos; keep the queue and the button
+     reachable without scrolling the whole panel. */
+  max-height: 168px;
+  overflow-y: auto;
+}
+
+.repo-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  padding: 5px 7px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+.repo-row:hover:not(:disabled) { background: var(--bg-hover); }
+.repo-row:disabled { cursor: default; color: var(--ink-muted); }
+
+.repo-sign {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  background: var(--clay-wash);
+  color: var(--clay-ink);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.repo-row.added .repo-sign { background: transparent; }
+
+.repo-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+}
+
+.repo-stars {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+
+/* Off GitHub with something queued: one line so a selection is never stranded. */
+.repo-reminder {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 7px 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  color: var(--ink-secondary);
+}
+
+.repo-reminder span { flex: 1; min-width: 0; }
+
+.repo-reminder-btn {
+  padding: 3px 9px;
+  background: var(--clay);
+  border: none;
+  border-radius: 999px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--on-clay);
+  cursor: pointer;
+  transition: background var(--dur) var(--ease);
+}
+
+.repo-reminder-btn:hover { background: var(--clay-ink); }
+
+.repo-reminder-btn.subtle {
+  background: transparent;
+  color: var(--ink-muted);
+}
+
+.repo-reminder-btn.subtle:hover { background: var(--bg-hover); color: var(--ink); }
+
+/* A real <button>, so the UA styles need resetting. */
+.shortcuts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-secondary);
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+.shortcuts-header:hover {
+  background: var(--bg-hover);
+  color: var(--ink);
+}
+
+.shortcuts-header svg { transition: transform 200ms var(--ease); flex-shrink: 0; }
+.keyboard-shortcuts.expanded .shortcuts-header svg { transform: rotate(180deg); }
+
+.shortcuts-content {
+  display: none;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: 0 12px 12px 12px;
+}
+
+.keyboard-shortcuts.expanded .shortcuts-content { display: flex; }
+
+.repo-input {
+  width: 100%;
+  padding: 7px 10px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--ink);
+  background: var(--bg-surface);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+
+.repo-input::placeholder { color: var(--ink-muted); }
+.repo-input:hover { background: var(--bg-card); }
+.repo-input:focus { border-color: var(--clay); background: var(--bg-card); }
+
+.repo-btn {
+  padding: 8px 12px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--on-clay);
+  background: var(--clay);
+  border: 1px solid var(--clay);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+
+.repo-btn:hover:not(:disabled) {
+  background: var(--clay-hover);
+  border-color: var(--clay-hover);
+}
+
+.repo-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.repo-note {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--ink-muted);
+}
+
+/* ---- Footer ---- */
+
+.footer {
+  margin-top: auto;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--hairline);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.footer .keyboard-shortcuts { flex: 1; min-width: 0; }
+.keyboard-shortcuts.expanded { align-self: flex-start; }
+
+.shortcut-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 11px;
+}
+
+.shortcut-key {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--clay-ink);
+  background: var(--clay-wash);
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.shortcut-desc { color: var(--ink-secondary); }
+
+.settings-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 8px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  color: var(--ink-secondary);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease),
+              border-color var(--dur) var(--ease);
+}
+
+.settings-btn:hover {
+  background: var(--bg-hover);
+  color: var(--ink);
+  border-color: var(--hairline-strong);
+}
+
+.settings-btn svg { flex-shrink: 0; }
+
+/* ---- Scrollbar ---- */
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--hairline);
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--bg-page);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--hairline-strong); }
+
+/* ---------------------------------------------------------------------------
+   Reduced motion.
+   --------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Focus indication, last in the file on purpose.
+   :where() has zero specificity, so this block must come after every rule that
+   sets `transition` or `outline`, or those win on source order and the ring
+   animates in from zero width instead of appearing.
+   --------------------------------------------------------------------------- */
+:where(button, input, textarea, select, a, [tabindex]):focus-visible {
+  outline: 2px solid var(--clay) !important;
+  outline-offset: 2px;
+  transition: none !important;
+}

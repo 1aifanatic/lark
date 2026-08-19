@@ -1,154 +1,150 @@
-# LLM Content Extractor
+# LARK
 
-A powerful Chrome extension that extracts webpage URLs or YouTube video transcripts and sends them directly to your favorite LLM (ChatGPT, Google Gemini, Grok, or Claude) with customizable prompts.
+**L**LM **A**rticle **R**elay **K**it.
 
-![Extension Preview](icons/icon128.svg)
+A Chrome extension that extracts webpage content — article text, page URLs, or YouTube
+video transcripts — and sends it straight to your favorite LLM with customizable prompts.
+Paste into the LLM's own web UI, so your existing logins and subscriptions just work.
 
 ## ✨ Features
 
 ### Core Functionality
-- **Smart Page Detection**: Automatically detects whether you're on a regular webpage or YouTube video
-- **URL Extraction**: Capture any webpage URL with a single click
-- **YouTube Transcript Extraction**: Extract complete video transcripts from YouTube videos
-- **Multi-LLM Support**: Send content to ChatGPT, Google Gemini, Grok, or Claude
-- **Custom System Prompts**: Define your own prompt templates for different use cases
+- **Smart Page Detection** — knows whether you're on a regular webpage or a YouTube video
+- **Article extraction** — non-YouTube pages send readable page text, not just the URL
+- **YouTube Transcript Extraction** — full transcripts via YouTube's transcript panel
+- **12 LLM platforms** — ChatGPT, Gemini, Claude, Grok, DeepSeek, Kimi, Qwen, Perplexity,
+  Poe, Mistral Le Chat, HuggingChat, Copilot — send to several at once
+- **Skills** — named, composable prompt modifiers that stack on top of your system prompt
+  (up to 3 per send), fully editable in Settings
+- **Social drafts** — *X Post*, *X Thread* and *LinkedIn Post* Skills turn whatever you are
+  reading into a publishable draft. They write **plain text**: no markdown, and no
+  Unicode look-alike letters for fake bold or italics — screen readers announce those as
+  gibberish and they break search, copy-paste and translation. Ordinary Unicode
+  punctuation (→ • — “ ” …) is used where it earns its place.
+- **Custom System Prompts** — define what the model should do with the content
+- **Choose your platforms** — hide the ones you never use in Settings → Available Platforms
+- **GitHub repo comparison** — on any GitHub page, LARK lists the repos it finds there;
+  click to queue 2–3 (or right-click any repo link → *Add to LARK comparison*), then send
+  them to your LLMs judged against a six-axis rubric. No URLs to copy, ever. The queue
+  survives while you browse between repos.
+- **Copy to clipboard** — copy the composed content or just the URL
 
-### YouTube-Specific Features
-- Automatic YouTube URL detection (youtube.com, youtu.be)
-- Full transcript extraction from YouTube's caption data
-- Support for both manual and auto-generated captions
-- English transcript preference with fallback options
-- Clean text output with timestamps removed
+### New Ways to Send
+- **Right-click → Send with LARK** — send the current page, a text selection, or a link
+  without opening the panel
+- **Browser-wide shortcut** — `Alt+Shift+X` extracts the current page and sends it to
+  your selected LLMs from anywhere
+- **YouTube embedded button** — a "Send with LARK" button right on the video page
 
-### User Interface
-- Clean, modern dark theme interface
-- One-click extraction and sending
-- Settings page for customization
-- Pre-built prompt templates for common use cases
-- Export/Import settings functionality
+### Appearance
+- **Light, dark, or system theme** — toggle light/dark from the panel header, or pick
+  System/Light/Dark in Settings (warm paper + clay design language)
+- **Keyboard shortcuts** — ⌘/Ctrl+Enter (extract & send), ⌘/Ctrl+Shift+C (copy content),
+  ⌘/Ctrl+Shift+U (copy URL), Alt+Shift+X (browser-wide send)
+- Toast notifications, live selection counter, progress bar, reduced-motion support
 
 ## 🚀 Installation
 
-### Step 1: Generate Icons
-1. Open `generate-icons.html` in your browser
-2. Click "Download All Icons"
-3. Save the PNG files to the `icons/` folder
-
-### Step 2: Load the Extension
-1. Open Chrome and navigate to `chrome://extensions/`
-2. Enable "Developer mode" (toggle in the top right)
-3. Click "Load unpacked"
-4. Select the extension folder (this folder containing `manifest.json`)
-5. The extension icon should appear in your toolbar
-
-### Step 3: Pin the Extension (Optional)
-1. Click the puzzle piece icon in Chrome's toolbar
-2. Find "LLM Content Extractor" and click the pin icon
+1. Open Chrome and go to `chrome://extensions/`
+2. Enable **Developer mode** (top right)
+3. Click **Load unpacked** and select this folder (the one containing `manifest.json`)
+4. Pin the extension from the puzzle-piece menu for quick access
 
 ## 📖 Usage
 
-### Extracting Content
+### Side panel
+1. Click the extension icon — LARK opens as a side panel and **stays open while you browse**
+2. Navigate to any webpage or YouTube video; the panel keeps up with the tab you're on
+3. Tick the LLM(s) you want (ChatGPT is preselected on first run)
+4. Optionally add Skills, then click **Extract & Send** (or press ⌘/Ctrl+Enter)
 
-1. **Navigate** to any webpage or YouTube video
-2. **Click** the extension icon in your toolbar
-3. **Select** your preferred LLM from the dropdown
-4. **Click** "Extract & Send"
-5. The extension will open your selected LLM and paste the content
+The first LLM opens in the foreground; the rest open in the background and the content
+is pasted into each.
 
-### For Webpages
-- The page URL and title are captured
-- Combined with your system prompt
-- Sent to your selected LLM
+### Comparing GitHub repos
+1. Open any GitHub page — a repo, search results, trending, a profile, or an awesome-list
+   README. The panel lists the repos it found there, with star counts.
+2. Click **+** on two or three of them. Or right-click any repo link anywhere and choose
+   **Add to LARK comparison** — the toolbar badge shows how many are queued.
+3. The queue persists, so you can browse from repo to repo adding as you go.
+4. Optionally say what you need it for — it changes the verdict — then **Compare & Send**.
 
-### For YouTube Videos
-- The full transcript is extracted
-- Video title and URL are included
-- Clean text without timestamps
-- English captions preferred (falls back to available languages)
+Every figure in the comparison is read from the GitHub API, not scraped from the page.
+Unauthenticated that's 60 requests/hour, roughly 6–7 comparisons; it fails loudly with the
+reset time rather than degrading.
 
-## ⚙️ Settings
+### Right-click menu
+- **Send this page** — sends readable article text (falls back to the URL)
+- **Send selection** — sends exactly the text you highlighted
+- **Send this link** — sends the link itself
 
-Access settings by clicking the "Settings" button in the popup or right-clicking the extension icon.
+### Keyboard command
+Press `Alt+Shift+X` anywhere to send the current page to your selected LLMs. You can
+remap it at `chrome://extensions/shortcuts`.
 
-### LLM Selection
-Choose your default LLM platform:
-- **ChatGPT** - OpenAI's GPT models
-- **Google Gemini** - Google's AI assistant
-- **Grok** - xAI's conversational AI
-- **Claude** - Anthropic's AI assistant
+## ⚙️ Settings (options page)
 
-### System Prompt
-Customize the prompt that's prepended to extracted content. The prompt supports:
-- Multi-line text
-- Unlimited length
-- Markdown formatting
-
-### Prompt Templates
-Quick-start templates for common use cases:
-- 📝 **Summarize** - Get concise summaries
-- 🎯 **Key Points** - Extract main points
-- 🌐 **Translate** - Translate and improve text
-- 💡 **Explain** - Simple explanations
-- ✅ **Action Items** - Extract actionable tasks
-- 🔍 **Critique** - Critical analysis
+- **Appearance** — System / Light / Dark theme
+- **Available Platforms** — tick only the platforms you actually use; the rest disappear
+  from the panel and from the default-platform list
+- **Default LLM Platform** — used by the YouTube button and the browser-wide shortcut
+- **System Prompt** — the instruction prepended to every send (with character count)
+- **Skills** — add, rename, edit, delete, reset, or restore the built-in skills
+- **Export / Import** — all settings as a JSON file
 
 ## 🔧 Troubleshooting
 
-### Transcript Not Available
-- Check if the video has captions enabled
-- Try videos with manual captions first
-- Auto-generated captions may not be available for all videos
+### Transcript not available
+- The video may have no captions, or YouTube may have served the retired legacy panel —
+  the error message tells you which, and reloading the page or opening the transcript
+  manually first can help.
 
-### Content Not Pasting
+### Content not pasting
 - Make sure you're logged into the LLM platform
-- Try refreshing the LLM page
-- The extension may need a moment to inject content
-
-### Extension Not Working
-- Check that all permissions are granted
-- Reload the extension from `chrome://extensions/`
-- Check the browser console for errors
+- The injection waits for the chat input to appear; give it a few seconds
+- Reload the extension from `chrome://extensions/` after updating
+- A Send Run is bound to the exact tabs LARK opens. Opening an AI site later will not
+  reuse or paste content from an earlier run.
 
 ## 📁 File Structure
 
 ```
-├── manifest.json          # Extension configuration
-├── popup.html             # Extension popup UI
-├── popup.css              # Popup styles
-├── popup.js               # Popup logic
-├── options.html           # Settings page
-├── options.css            # Settings styles
-├── options.js             # Settings logic
-├── background.js          # Service worker
-├── youtube-extractor.js   # YouTube transcript extraction
-├── llm-injector.js        # LLM content injection
+├── manifest.json          # Extension config (permissions, commands, content scripts)
+├── sidepanel.html/css/js  # Main UI (Chrome side panel)
+├── options.html/css/js    # Settings page
+├── background.js          # Service worker: runtime coordination and browser adapters
+├── platforms.js           # Platform catalog, URL matching, and editor adapters
+├── preferences.js         # Versioned settings model, migration, and runtime client
+├── page-intake.js         # Page/selection/link/transcript capture policy
+├── send-run.js            # Exact-tab delivery lifecycle, leases, and cleanup
+├── theme.js               # Light/dark/system theme resolution
+├── page-text.js           # Readable page-text extraction
+├── skills.js              # Skills defaults + pure message composition
+├── github.js              # GitHub comparison + on-page repo scan
+├── youtube-extractor.js   # YouTube transcript extraction + embedded button
+├── llm-injector.js        # Pastes content into each LLM's chat input
+├── architecture-tests.mjs # Domain-module regression tests
+├── sidepanel-startup-test.mjs # Side-panel initialization regression test
+├── verify.mjs             # Manifest and runtime integration checks
 ├── generate-icons.html    # Icon generator tool
-├── icons/                 # Extension icons
-│   ├── icon16.png
-│   ├── icon32.png
-│   ├── icon48.png
-│   └── icon128.png
+├── create-icons.js        # Rasterises icons/lark.svg into the PNGs
+├── icons/                 # lark.svg master + generated PNGs (16/32/48/128)
 └── README.md              # This file
 ```
 
 ## 🔒 Permissions
 
-The extension requires the following permissions:
-- **activeTab**: Access the current tab's URL
-- **storage**: Save your settings locally
-- **scripting**: Inject content scripts
-- **tabs**: Query and update tabs
-- **Host permissions**: Access YouTube and LLM platforms
-
-## 🤝 Contributing
-
-Feel free to submit issues and enhancement requests!
+- **activeTab** — access the current tab (article extraction on user gesture)
+- **storage** — save settings locally
+- **scripting** — inject content scripts
+- **tabs** — query and open tabs
+- **contextMenus** — the right-click "Send with LARK" menu
+- **sidePanel** — the main UI surface
+- **Host permissions** — YouTube, the 12 LLM platforms, GitHub and the GitHub API
+- **All sites** — needed because the side panel stays open while you browse. `activeTab`
+  only covers the tab you opened the panel from, so without this, reading the page and
+  finding repos would fail on every other tab.
 
 ## 📄 License
 
-MIT License - feel free to use and modify as needed.
-
----
-
-Made with ❤️ for the AI-powered productivity community
-
+MIT License — feel free to use and modify as needed.

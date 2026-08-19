@@ -1,13 +1,24 @@
-node_modules/
-dist/
-*.bin
-*.weights
-*.pt
-*.pth
-*.ckpt
-*.safetensors
-__pycache__/
-.env
-.env.local
-.env.*.local
+# Nothing here is built — LARK ships the sources Chrome loads directly.
+# These are the things that still manage to turn up in a working copy.
 
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# Scratch harnesses and screenshots from local debugging sessions.
+scratchpad/
+*.local.*
+/tmp/
+
+# Packaged extension artefacts
+*.zip
+*.crx
+*.pem
+
+# Editor / OS noise
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini

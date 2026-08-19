@@ -1,0 +1,7 @@
+# Normalise text to LF in the repository so the icon-freshness check in CI does not
+# trip over Windows checkouts rewriting the generated SVGs.
+* text=auto eol=lf
+
+*.png binary
+*.crx binary
+*.zip binary

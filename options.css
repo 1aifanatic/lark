@@ -1,6 +1,3 @@
-/* Font Import */
-@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap');
-
 * {
   margin: 0;
   padding: 0;
@@ -8,31 +5,142 @@
 }
 
 :root {
-  --bg-primary: #0a0a0f;
-  --bg-secondary: #12121a;
-  --bg-tertiary: #1a1a25;
-  --bg-hover: #222230;
-  --accent-primary: #ff6b35;
-  --accent-secondary: #f7c94b;
-  --accent-gradient: linear-gradient(135deg, #ff6b35 0%, #f7c94b 100%);
-  --text-primary: #ffffff;
-  --text-secondary: #a0a0b0;
-  --text-muted: #606070;
-  --border-color: #2a2a3a;
-  --success: #4ade80;
-  --error: #f87171;
+  color-scheme: light;
+
+  /* Warm paper palette. Token NAMES are unchanged from the previous dark theme so
+     every existing rule in this file inherits the new look; only the values moved.
+     All pairs contrast-audited: ink 15.87 / secondary 5.86 / muted 4.53 on page. */
+  --bg-primary: #F0EEE6;      /* page */
+  --bg-secondary: #FFFFFF;    /* cards */
+  --bg-tertiary: #FAF9F5;     /* inputs, insets */
+  --bg-hover: #F0EEE6;
+
+  --accent-primary: #B85C38;  /* clay fill */
+  --accent-secondary: #954625;/* clay ink — for accent TEXT (5.53 on page) */
+  --accent-gradient: #B85C38; /* flat: this design language has no gradients */
+  --on-accent: #FFFFFF;       /* 4.54 on clay */
+
+  --text-primary: #141413;
+  --text-secondary: #5C5B55;
+  --text-muted: #6E6C64;
+
+  --border-color: #DEDBD0;    /* decorative hairline */
+  --border-strong: #8A8578;   /* editable fields — 3.49 on surface */
+
+  --accent-wash: rgba(184, 92, 56, 0.09);
+  --success: #2E6F4E;
+  --error: #A32B22;
+
+  --font-ui: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  --font-display: ui-serif, Georgia, 'Times New Roman', serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, monospace;
+
   --chatgpt: #10a37f;
   --gemini: #4285f4;
-  --grok: #ffffff;
-  --claude: #cc785c;
+  --grok: #3C3B37;
+  --claude: #CC785C;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-primary: #1F1E1B;
+    --bg-secondary: #2C2B27;
+    --bg-tertiary: #262622;
+    --bg-hover: #34332E;
+
+    --accent-primary: #E08A6A;
+    --accent-secondary: #E5947A;
+    --accent-gradient: #E08A6A;
+    --on-accent: #1F1E1B;
+
+    --text-primary: #F5F4EF;
+    --text-secondary: #B8B5AC;
+    --text-muted: #9C998F;
+
+    --border-color: #3A3833;
+    --border-strong: #7A776C;
+
+    --accent-wash: rgba(224, 138, 106, 0.14);
+    --success: #6FCF97;
+    --error: #F2938C;
+
+    --grok: #E8E6DF;
+  }
+}
+
+/* Forced themes (user choice via theme.js). Attribute selectors out-specify :root,
+   so these win over both the light defaults and the media-query dark block. */
+html[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg-primary: #1F1E1B;
+  --bg-secondary: #2C2B27;
+  --bg-tertiary: #262622;
+  --bg-hover: #34332E;
+
+  --accent-primary: #E08A6A;
+  --accent-secondary: #E5947A;
+  --accent-gradient: #E08A6A;
+  --on-accent: #1F1E1B;
+
+  --text-primary: #F5F4EF;
+  --text-secondary: #B8B5AC;
+  --text-muted: #9C998F;
+
+  --border-color: #3A3833;
+  --border-strong: #7A776C;
+
+  --accent-wash: rgba(224, 138, 106, 0.14);
+  --success: #6FCF97;
+  --error: #F2938C;
+
+  --grok: #E8E6DF;
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
+
+  --bg-primary: #F0EEE6;
+  --bg-secondary: #FFFFFF;
+  --bg-tertiary: #FAF9F5;
+  --bg-hover: #F0EEE6;
+
+  --accent-primary: #B85C38;
+  --accent-secondary: #954625;
+  --accent-gradient: #B85C38;
+  --on-accent: #FFFFFF;
+
+  --text-primary: #141413;
+  --text-secondary: #5C5B55;
+  --text-muted: #6E6C64;
+
+  --border-color: #DEDBD0;
+  --border-strong: #8A8578;
+
+  --accent-wash: rgba(184, 92, 56, 0.09);
+  --success: #2E6F4E;
+  --error: #A32B22;
+
+  --grok: #3C3B37;
 }
 
 html {
   scroll-behavior: smooth;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 body {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-ui);
   background: var(--bg-primary);
   color: var(--text-primary);
   min-height: 100vh;
@@ -43,10 +151,7 @@ body {
   max-width: 800px;
   margin: 0 auto;
   padding: 40px 24px;
-  background: 
-    radial-gradient(ellipse at top right, rgba(255, 107, 53, 0.06) 0%, transparent 50%),
-    radial-gradient(ellipse at bottom left, rgba(247, 201, 75, 0.04) 0%, transparent 50%),
-    var(--bg-primary);
+  background: var(--bg-primary);
   min-height: 100vh;
 }
 
@@ -71,20 +176,18 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--bg-primary);
-  box-shadow: 0 8px 30px rgba(255, 107, 53, 0.3);
+  color: var(--on-accent);
   flex-shrink: 0;
 }
 
+/* Plain ink, not clipped-gradient text. A serif title at a comfortable weight is the
+   statement here; tinting it as well would be two statements competing. */
 .header h1 {
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-display);
   font-size: 28px;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-  background: var(--accent-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
   margin-bottom: 4px;
 }
 
@@ -129,6 +232,57 @@ body {
 .section-header p {
   color: var(--text-secondary);
   font-size: 14px;
+}
+
+/* Appearance — theme segmented control */
+.theme-control {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  max-width: 480px;
+}
+
+.theme-option {
+  cursor: pointer;
+}
+
+.theme-option input {
+  display: none;
+}
+
+.theme-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  background: var(--bg-tertiary);
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.theme-card svg {
+  color: var(--text-muted);
+  transition: color 0.2s ease;
+}
+
+.theme-option:hover .theme-card {
+  border-color: var(--accent-primary);
+  background: var(--bg-hover);
+}
+
+.theme-option input:checked + .theme-card {
+  border-color: var(--accent-primary);
+  background: var(--accent-wash);
+  color: var(--accent-secondary);
+}
+
+.theme-option input:checked + .theme-card svg {
+  color: var(--accent-primary);
 }
 
 /* LLM Grid */
@@ -177,8 +331,7 @@ body {
 
 .llm-option input:checked + .llm-card {
   border-color: var(--accent-primary);
-  background: rgba(255, 107, 53, 0.1);
-  box-shadow: 0 0 20px rgba(255, 107, 53, 0.15);
+  background: var(--accent-wash);
 }
 
 .llm-icon {
@@ -225,6 +378,54 @@ body {
   color: #ec4899;
 }
 
+/* New platforms use brand-monogram chips (decorative identity, name below is the
+   accessible label). */
+.llm-icon.perplexity {
+  background: rgba(32, 128, 141, 0.15);
+  color: #20808D;
+  font-weight: 700;
+  font-size: 20px;
+  font-family: var(--font-ui);
+}
+
+.llm-icon.poe {
+  background: rgba(106, 76, 255, 0.15);
+  color: #6A4CFF;
+  font-weight: 700;
+  font-size: 20px;
+  font-family: var(--font-ui);
+}
+
+.llm-icon.mistral {
+  background: rgba(247, 181, 0, 0.18);
+  color: #8a6200;
+  font-weight: 700;
+  font-size: 20px;
+  font-family: var(--font-ui);
+}
+
+.llm-icon.huggingchat {
+  background: rgba(255, 210, 30, 0.18);
+  color: #8a6d00;
+  font-weight: 700;
+  font-size: 20px;
+  font-family: var(--font-ui);
+}
+
+.llm-icon.copilot {
+  background: rgba(75, 91, 252, 0.15);
+  color: #4B5BFC;
+  font-weight: 700;
+  font-size: 20px;
+  font-family: var(--font-ui);
+}
+
+/* Dark-mode adjustments for the monogram chips. */
+html[data-theme="dark"] .llm-icon.mistral     { color: #F7B500; }
+html[data-theme="dark"] .llm-icon.huggingchat { color: #FFD21E; }
+html[data-theme="dark"] .llm-icon.copilot     { color: #A5B4FC; }
+html[data-theme="dark"] .llm-icon.perplexity  { color: #4FB8C4; }
+
 .section-note {
   font-size: 13px;
   color: var(--text-muted);
@@ -257,7 +458,7 @@ body {
   background: transparent;
   border: none;
   color: var(--text-primary);
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 13px;
   line-height: 1.7;
   resize: vertical;
@@ -283,7 +484,7 @@ body {
 .char-count {
   font-size: 12px;
   color: var(--text-muted);
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-mono);
 }
 
 .reset-btn {
@@ -388,7 +589,7 @@ body {
   gap: 8px;
   padding: 10px 16px;
   border-radius: 8px;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-ui);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -445,3 +646,252 @@ body {
 .section:nth-child(2) { animation-delay: 0.2s; }
 .section:nth-child(3) { animation-delay: 0.3s; }
 
+
+/* Skills editor */
+.skills-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skill-row {
+  background: var(--bg-tertiary, #1a1a25);
+  border: 1px solid var(--border-color, #2a2a3a);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skill-row-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.skill-name {
+  flex: 1;
+  padding: 7px 10px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--text-primary, #fff);
+  background: var(--bg-secondary, #12121a);
+  border: 1px solid var(--border-strong, #5f5f7a);
+  border-radius: 6px;
+  outline: none;
+}
+
+.skill-name:focus {
+  border-color: var(--accent-primary, #ff6b35);
+}
+
+.skill-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.skill-badge {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted, #606070);
+  border: 1px solid var(--border-color, #2a2a3a);
+  border-radius: 10px;
+  padding: 2px 8px;
+}
+
+.skill-action {
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--text-secondary, #a0a0b0);
+  background: transparent;
+  border: 1px solid var(--border-color, #2a2a3a);
+  border-radius: 6px;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.skill-action:hover {
+  color: var(--text-primary, #fff);
+  border-color: var(--text-muted, #606070);
+}
+
+.skill-action.danger:hover {
+  color: var(--error, #f87171);
+  border-color: var(--error, #f87171);
+}
+
+.skill-body {
+  width: 100%;
+  padding: 9px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  line-height: 1.5;
+  color: var(--text-secondary, #a0a0b0);
+  background: var(--bg-secondary, #12121a);
+  border: 1px solid var(--border-strong, #5f5f7a);
+  border-radius: 6px;
+  resize: vertical;
+  outline: none;
+}
+
+.skill-body:focus {
+  border-color: var(--accent-primary, #ff6b35);
+  color: var(--text-primary, #fff);
+}
+
+.skills-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+/* ---- Available platforms ---- */
+/* Mirrors the side panel's picker so the two lists read as the same control, but
+   written against this file's own token names. */
+
+.enabled-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 2px;
+  margin-top: 12px;
+}
+
+.enabled-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.select-btn {
+  padding: 4px 12px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+
+.select-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.enabled-actions .section-note { margin: 0; }
+
+/* Hidden by applyEnabledToDefaultGrid() — the default-platform grid is hand-written
+   markup, so disabled cards are hidden rather than never rendered. */
+.llm-option[hidden] { display: none; }
+
+.llm-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  min-height: 30px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.llm-checkbox:hover { background: var(--bg-hover); }
+
+.llm-checkbox input[type="checkbox"] {
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--bg-tertiary);
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.llm-checkbox input[type="checkbox"]:checked {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+
+.llm-checkbox input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  top: 1px;
+  left: 4px;
+  width: 4px;
+  height: 8px;
+  border: solid var(--on-accent);
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+}
+
+/* Brand monogram chips. Decorative identity — the adjacent name is the accessible
+   label, so the chip is aria-hidden and brand colours are exempt from AA. */
+.llm-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-ui);
+  line-height: 1;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.llm-mark.chatgpt     { background: rgba(16, 163, 127, 0.15);   color: #10a37f; }
+.llm-mark.gemini      { background: rgba(66, 133, 244, 0.15);   color: #4285f4; }
+.llm-mark.claude      { background: rgba(193, 95, 60, 0.15);    color: #C15F3C; }
+.llm-mark.grok        { background: rgba(60, 59, 55, 0.15);     color: #3C3B37; }
+.llm-mark.deepseek    { background: rgba(77, 107, 254, 0.15);   color: #4D6BFE; }
+.llm-mark.kimi        { background: rgba(139, 92, 246, 0.15);   color: #8B5CF6; }
+.llm-mark.qwen        { background: rgba(236, 72, 153, 0.15);   color: #EC4899; }
+.llm-mark.perplexity  { background: rgba(32, 128, 141, 0.15);   color: #20808D; }
+.llm-mark.poe         { background: rgba(106, 76, 255, 0.15);   color: #6A4CFF; }
+.llm-mark.mistral     { background: rgba(247, 181, 0, 0.18);    color: #8a6200; }
+.llm-mark.huggingchat { background: rgba(255, 210, 30, 0.18);   color: #8a6d00; }
+.llm-mark.copilot     { background: rgba(75, 91, 252, 0.15);    color: #4B5BFC; }
+
+/* Dark-mode brand adjustments — the light-tuned inks above vanish on dark paper.
+   theme.js always resolves data-theme to light or dark, so this covers "system" too. */
+html[data-theme="dark"] .llm-mark.grok        { color: #E8E6DF; background: rgba(232, 230, 223, 0.14); }
+html[data-theme="dark"] .llm-mark.mistral     { color: #F7B500; }
+html[data-theme="dark"] .llm-mark.huggingchat { color: #FFD21E; }
+html[data-theme="dark"] .llm-mark.copilot     { color: #A5B4FC; }
+html[data-theme="dark"] .llm-mark.perplexity  { color: #4FB8C4; }
+html[data-theme="dark"] .llm-mark.deepseek    { color: #7E8CFE; }
+
+.checkbox-label {
+  font-size: 13px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------------------------------------------------------------------------
+   Focus indication, last in the file on purpose.
+   :where() has zero specificity, so this block must come after every rule that
+   sets `transition` or `outline`, or those win on source order and the ring
+   animates in (or never appears).
+   --------------------------------------------------------------------------- */
+:where(button, input, textarea, select, a, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent-secondary) !important;
+  outline-offset: 2px;
+  transition: none !important;
+}

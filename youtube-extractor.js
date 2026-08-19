@@ -1,7 +1,9 @@
 // YouTube Transcript Extractor Content Script
 // Extracts transcripts using YouTube's engagement panel API
 
-// Listen for messages from popup
+const sendRunClient = Lark.createSendRunClient(chrome.runtime);
+
+// Listen for messages from the side panel
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'extractTranscript') {
     extractTranscript()
@@ -28,7 +30,7 @@ function initYouTubeButton() {
   if (!location.pathname.includes('/watch')) return;
   
   // Remove existing button if any
-  const existing = document.getElementById('llm-extractor-btn');
+  const existing = document.getElementById('lark-btn');
   if (existing) existing.remove();
   
   // Wait for the video controls to load
@@ -54,20 +56,24 @@ function addEmbeddedButton() {
   }
   
   if (!targetContainer) {
-    console.log('LLM Extractor: Could not find target container for button');
+    console.log('LARK: Could not find target container for button');
     return;
   }
   
+  // Theme-aware clay button — matches the extension's design language (no gradient).
+  const ytDark = document.documentElement.hasAttribute('dark');
+  const fill = ytDark ? '#E08A6A' : '#B85C38';
+  const ink = ytDark ? '#1F1E1B' : '#FFFFFF';
+  const hover = ytDark ? '#E9A088' : '#954625';
+
   // Create the button
   const button = document.createElement('button');
-  button.id = 'llm-extractor-btn';
+  button.id = 'lark-btn';
   button.innerHTML = `
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <svg width="18" height="18" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path fill="currentColor" d="M 8 32 L 48 58 C 50 47 56 38 64 38 C 72 38 78 47 80 58 L 120 32 C 116 55 104 74 80 83 L 64 99 L 48 83 C 24 74 12 55 8 32 Z"/>
     </svg>
-    <span>AI Summary</span>
+    <span>Send with LARK</span>
   `;
   
   // Style the button
@@ -77,28 +83,28 @@ function addEmbeddedButton() {
     gap: 6px;
     padding: 8px 16px;
     margin-left: 8px;
-    background: linear-gradient(135deg, #ff6b35 0%, #f7c94b 100%);
+    background: ${fill};
     border: none;
     border-radius: 18px;
-    color: #0a0a0f;
+    color: ${ink};
     font-family: 'YouTube Sans', 'Roboto', sans-serif;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
     vertical-align: middle;
   `;
   
-  // Hover effect
+  // Hover effect — colour change only, no lift or scale.
   button.addEventListener('mouseenter', () => {
-    button.style.transform = 'scale(1.05)';
-    button.style.boxShadow = '0 4px 12px rgba(255, 107, 53, 0.4)';
+    button.style.background = hover;
+    button.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.3)';
   });
   
   button.addEventListener('mouseleave', () => {
-    button.style.transform = 'scale(1)';
-    button.style.boxShadow = '0 2px 8px rgba(255, 107, 53, 0.3)';
+    button.style.background = fill;
+    button.style.boxShadow = '0 1px 4px rgba(0, 0, 0, 0.25)';
   });
   
   // Click handler - extract and send to LLM
@@ -114,16 +120,19 @@ function addEmbeddedButton() {
     targetContainer.appendChild(button);
   }
   
-  console.log('LLM Extractor: Button added to YouTube');
+  console.log('LARK: Button added to YouTube');
 }
 
 async function handleQuickExtract() {
-  const button = document.getElementById('llm-extractor-btn');
+  const button = document.getElementById('lark-btn');
   const originalContent = button.innerHTML;
-  
-  // Show loading state
+  const originalBackground = button.style.background;
+
+  // Show loading state. The spinner is skipped for users who prefer reduced motion.
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const spinStyle = reduceMotion ? '' : ' style="animation: spin 1s linear infinite;"';
   button.innerHTML = `
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="animation: spin 1s linear infinite;">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"${spinStyle}>
       <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" stroke-dasharray="30 70"/>
     </svg>
     <span>Extracting...</span>
@@ -131,64 +140,28 @@ async function handleQuickExtract() {
   button.disabled = true;
   
   // Add spin animation
-  const style = document.createElement('style');
-  style.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
-  document.head.appendChild(style);
+  if (!reduceMotion) {
+    const style = document.createElement('style');
+    style.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+    document.head.appendChild(style);
+  }
   
   try {
-    // Extract transcript
-    const result = await extractTranscript();
-    
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to extract transcript');
-    }
-    
-    // Get user preferences
-    const { selectedLLM, systemPrompt } = await chrome.storage.local.get(['selectedLLM', 'systemPrompt']);
-    const llm = selectedLLM || 'chatgpt';
-    const prompt = systemPrompt || 'Please analyze the following content and provide:\n\n1. A concise summary (2-3 paragraphs)\n2. Key takeaways and main points\n3. Any actionable insights or recommendations\n\nBe thorough but focused. Highlight the most important information.';
-    
-    // Compose content
-    const content = composeQuickContent(prompt, result.transcript, result.videoTitle);
-    
-    // Store for LLM injector
-    await chrome.storage.local.set({ 
-      pendingContent: content,
-      targetLLM: llm
-    });
-    
-    // Get LLM URLs
-    const llmUrls = {
-      chatgpt: 'https://chatgpt.com/?model=auto',
-      gemini: 'https://gemini.google.com/app',
-      grok: 'https://grok.com/',
-      claude: 'https://claude.ai/new',
-      deepseek: 'https://chat.deepseek.com/',
-      kimi: 'https://www.kimi.com/',
-      qwen: 'https://chat.qwen.ai/'
-    };
-    
-    // Get all selected LLMs (for multi-select support)
-    const { selectedLLMs } = await chrome.storage.local.get('selectedLLMs');
-    const llmsToOpen = (selectedLLMs && selectedLLMs.length > 0) ? selectedLLMs : [llm];
+    // Page Intake, Preferences, composition, and delivery live behind the
+    // background-owned Send Run seam. sender.tab identifies this exact video.
+    const receipt = await sendRunClient.start({ kind: 'page' });
     
     // Show success briefly
-    const llmNames = llmsToOpen.map(l => getLLMName(l)).join(', ');
+    const platformNames = receipt.deliveries
+      .filter(delivery => delivery.status === 'opened')
+      .map(delivery => delivery.platformId)
+      .join(', ');
     button.innerHTML = `
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
         <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      <span>Opening ${llmNames}...</span>
+      <span>Opening ${platformNames}...</span>
     `;
-    
-    // Open all selected LLMs in new tabs
-    for (let i = 0; i < llmsToOpen.length; i++) {
-      const targetLlm = llmsToOpen[i];
-      if (llmUrls[targetLlm]) {
-        if (i > 0) await sleep(300); // Small delay between tabs
-        window.open(llmUrls[targetLlm], '_blank');
-      }
-    }
     
     // Reset button after delay
     setTimeout(() => {
@@ -197,51 +170,41 @@ async function handleQuickExtract() {
     }, 2000);
     
   } catch (error) {
-    console.error('LLM Extractor error:', error);
+    console.error('LARK error:', error);
     
-    // Show error state
+    // Show error state — theme-aware error tone, content restored after a pause.
+    const ytDark = document.documentElement.hasAttribute('dark');
     button.innerHTML = `
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
         <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
         <line x1="15" y1="9" x2="9" y2="15" stroke="currentColor" stroke-width="2"/>
         <line x1="9" y1="9" x2="15" y2="15" stroke="currentColor" stroke-width="2"/>
       </svg>
-      <span>Error</span>
+      <span>Could not extract</span>
     `;
-    button.style.background = '#f87171';
+    button.style.background = ytDark ? '#F2938C' : '#A32B22';
     
     // Reset after delay
     setTimeout(() => {
       button.innerHTML = originalContent;
-      button.style.background = 'linear-gradient(135deg, #ff6b35 0%, #f7c94b 100%)';
+      button.style.background = originalBackground;
       button.disabled = false;
     }, 3000);
   }
 }
 
-function composeQuickContent(systemPrompt, transcript, videoTitle) {
-  const separator = '\n\n---\n\n';
-  const url = window.location.href;
-  
-  return systemPrompt + separator +
-    `**Video Title:** ${videoTitle || 'Unknown'}\n` +
-    `**Video URL:** ${url}\n\n` +
-    `**Transcript:**\n${transcript}`;
-}
-
-function getLLMName(value) {
-  const names = {
-    chatgpt: 'ChatGPT',
-    gemini: 'Gemini',
-    grok: 'Grok',
-    claude: 'Claude',
-    deepseek: 'DeepSeek',
-    kimi: 'Kimi',
-    qwen: 'Qwen'
-  };
-  return names[value] || value;
-}
-
+// Method order reflects what actually works as of 2026-08, verified against live
+// YouTube in a content-script isolated world:
+//
+//   panel scrape  - works. YouTube runs two panel implementations; the modern one
+//                   (PAmodern_transcript_view / transcript-segment-view-model) loads via
+//                   get_panel and populates. The legacy one is backed by the retired
+//                   get_transcript and opens empty. Which one a video gets is out of our
+//                   hands, so we read whichever renders.
+//   timedtext     - dead. Signed baseUrls return HTTP 200 with zero bytes (proof-of-origin
+//                   gating). Kept as a cheap attempt in case that changes.
+//   get_transcript- retired, returns 400. Kept last and only because it has not been
+//                   tested against a logged-in session, where it may still answer.
 async function extractTranscript() {
   const videoId = getVideoId();
   if (!videoId) {
@@ -249,43 +212,46 @@ async function extractTranscript() {
   }
 
   const videoTitle = getVideoTitle();
-  let transcript = null;
-  let lastError = null;
+  const failures = [];
 
-  // Method 1: Fetch transcript via YouTube's get_transcript API
-  try {
-    transcript = await fetchTranscriptAPI(videoId);
-    if (transcript && transcript.trim()) {
-      return { success: true, transcript, videoTitle, videoId };
+  const methods = [
+    ['transcript panel', scrapeTranscriptPanel],
+    ['timedtext captions', () => fetchFromTimedText(videoId)],
+    ['get_transcript API', () => fetchTranscriptAPI(videoId)],
+  ];
+
+  for (const [label, fn] of methods) {
+    try {
+      const transcript = await fn();
+      if (transcript && transcript.trim()) {
+        console.log(`LARK: transcript via ${label} (${transcript.length} chars)`);
+        return { success: true, transcript, videoTitle, videoId, method: label };
+      }
+      failures.push(`${label}: returned nothing`);
+    } catch (e) {
+      failures.push(`${label}: ${e.message}`);
+      console.log(`LARK: ${label} failed —`, e.message);
     }
-  } catch (e) {
-    lastError = e;
-    console.log('Method 1 (get_transcript API) failed:', e.message);
   }
 
-  // Method 2: Try fetching from timedtext API (captions)
-  try {
-    transcript = await fetchFromTimedText(videoId);
-    if (transcript && transcript.trim()) {
-      return { success: true, transcript, videoTitle, videoId };
-    }
-  } catch (e) {
-    lastError = e;
-    console.log('Method 2 (timedtext API) failed:', e.message);
-  }
+  // Be specific about why. A generic "no transcript" sends people looking in the wrong
+  // place when the real cause is that this video got the dead legacy panel.
+  const hasCaptions = pageAdvertisesCaptions();
+  const hint = hasCaptions
+    ? 'This video does have captions, but YouTube served the older transcript panel, which no longer loads. Try reloading the page, or open the transcript manually first.'
+    : 'This video appears to have no captions available.';
 
-  // Method 3: Scrape from transcript panel if it's open
-  try {
-    transcript = await scrapeTranscriptPanel();
-    if (transcript && transcript.trim()) {
-      return { success: true, transcript, videoTitle, videoId };
-    }
-  } catch (e) {
-    lastError = e;
-    console.log('Method 3 (panel scraping) failed:', e.message);
-  }
+  throw new Error(`Could not extract transcript. ${hint}\n\nTried — ${failures.join(' | ')}`);
+}
 
-  throw new Error(lastError?.message || 'Could not extract transcript. Please make sure the video has a transcript available.');
+// Does the page claim captions exist? Distinguishes "no transcript" from "transcript
+// exists but we could not reach it", which are very different problems for the user.
+function pageAdvertisesCaptions() {
+  try {
+    return /"captionTracks"\s*:\s*\[/.test(document.documentElement.innerHTML);
+  } catch {
+    return false;
+  }
 }
 
 function getVideoId() {
@@ -600,47 +566,113 @@ function parseTimedTextXML(xml) {
   return formatLines(lines);
 }
 
-// Method 3: Scrape directly from the transcript panel if visible
+// YouTube renamed the transcript renderer. Both families are queried because which
+// one a video gets is an A/B rollout we do not control.
+const SEGMENT_SELECTOR = 'transcript-segment-view-model, ytd-transcript-segment-renderer';
+
+function countSegments() {
+  return document.querySelectorAll(SEGMENT_SELECTOR).length;
+}
+
+// Open the transcript panel, wait for it to populate, then read every segment.
 async function scrapeTranscriptPanel() {
-  // Try to find and click the transcript button if panel isn't open
-  const transcriptButton = document.querySelector('button[aria-label="Show transcript"]') ||
-                           document.querySelector('ytd-button-renderer:has(yt-formatted-string:contains("Transcript"))');
-  
-  if (transcriptButton) {
-    transcriptButton.click();
-    await sleep(1500);
+  if (countSegments() === 0) {
+    await openTranscriptPanel();
   }
 
-  // Now scrape the transcript segments
-  const segmentSelectors = [
-    'ytd-transcript-segment-renderer .segment-text',
-    'ytd-transcript-segment-renderer yt-formatted-string.segment-text',
-    '#segments-container ytd-transcript-segment-renderer',
-    'yt-formatted-string.segment-text',
-  ];
-
-  let segments = [];
-  for (const selector of segmentSelectors) {
-    segments = document.querySelectorAll(selector);
-    if (segments.length > 0) break;
+  // Poll rather than sleep a fixed amount — the panel fetches its content, and how
+  // long that takes varies with video length and connection.
+  for (let i = 0; i < 12 && countSegments() === 0; i++) {
+    await sleep(1000);
   }
 
-  if (segments.length === 0) {
-    throw new Error('No transcript segments found in panel');
+  if (countSegments() === 0) {
+    throw new Error('panel opened but never populated (YouTube likely served the retired legacy panel)');
   }
+
+  await loadAllSegments();
 
   const lines = [];
-  for (const seg of segments) {
-    const textEl = seg.querySelector('.segment-text, yt-formatted-string') || seg;
-    const text = textEl.textContent?.trim();
+  for (const seg of document.querySelectorAll(SEGMENT_SELECTOR)) {
+    const text = cleanSegmentText(seg);
     if (text) lines.push(text);
   }
 
   if (lines.length === 0) {
-    throw new Error('No text extracted from transcript panel');
+    throw new Error('segments rendered but no text could be read from them');
   }
 
   return formatLines(lines);
+}
+
+async function openTranscriptPanel() {
+  // On longer videos the transcript control lives inside the collapsed description.
+  const expander = document.querySelector('#expand, #description-inline-expander #expand');
+  if (expander) {
+    expander.click();
+    await sleep(1200);
+  }
+
+  const button = document.querySelector('button[aria-label="Show transcript"]') ||
+                 document.querySelector('button[aria-label="Transcript"]') ||
+                 findClickableByText('transcript');
+
+  if (!button) throw new Error('no transcript control on this page');
+
+  button.click();
+  await sleep(1200);
+}
+
+// The panel virtualises on long videos: only the segments near the viewport exist in
+// the DOM. Scroll its container until the count stops growing, otherwise we would
+// silently return a partial transcript — the worst possible failure mode here.
+async function loadAllSegments() {
+  const seg = document.querySelector(SEGMENT_SELECTOR);
+  if (!seg) return;
+
+  let scroller = seg.parentElement;
+  while (scroller && scroller.scrollHeight <= scroller.clientHeight + 20) {
+    scroller = scroller.parentElement;
+  }
+  if (!scroller) return; // everything already fits; nothing to load
+
+  let previous = -1;
+  let stable = 0;
+  for (let i = 0; i < 60; i++) {
+    const current = countSegments();
+    if (current === previous) {
+      if (++stable >= 2) break; // two quiet rounds means we reached the end
+    } else {
+      stable = 0;
+    }
+    previous = current;
+    scroller.scrollTop = scroller.scrollHeight;
+    await sleep(400);
+  }
+}
+
+// A segment's textContent concatenates its timestamp, an accessibility duration label,
+// and the caption itself — e.g. "0:011 second[♪♪♪]". Strip the first two.
+function cleanSegmentText(seg) {
+  const textEl = seg.querySelector('.segment-text, yt-formatted-string.segment-text');
+  if (textEl?.textContent) return textEl.textContent.trim();
+
+  let text = (seg.textContent || '').trim();
+  text = text.replace(/^\d{1,2}:\d{2}(?::\d{2})?/, '');
+  text = text.replace(/^\s*(?:\d+\s*(?:hours?|minutes?|seconds?)(?:,\s*)?)+/i, '');
+  return text.trim();
+}
+
+// Find a clickable element whose visible text contains needle (case-insensitive).
+// Replaces the :contains() pseudo-class, which is not valid CSS — querySelector
+// throws SyntaxError on it rather than returning null, which silently killed this
+// fallback whenever the aria-label lookup above missed.
+function findClickableByText(needle) {
+  const candidates = document.querySelectorAll('button, ytd-button-renderer, tp-yt-paper-button');
+  for (const el of candidates) {
+    if (el.textContent?.toLowerCase().includes(needle)) return el;
+  }
+  return null;
 }
 
 // Format lines into readable paragraphs

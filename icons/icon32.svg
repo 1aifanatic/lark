@@ -1,13 +1,6 @@
-<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="grad32" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#ff6b35;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#f7c94b;stop-opacity:1" />
-    </linearGradient>
-  </defs>
-  <rect width="32" height="32" rx="6" fill="url(#grad32)"/>
-  <path d="M16 6L6 11L16 16L26 11L16 6Z" stroke="#0a0a0f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <path d="M6 21L16 26L26 21" stroke="#0a0a0f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M6 16L16 21L26 16" stroke="#0a0a0f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="32" height="32" role="img" aria-label="LARK">
+  <!-- Master mark. create-icons.js parses the two paths below to raster the PNGs,
+       so the coordinates live here and nowhere else. -->
+  <rect id="bg" width="128" height="128" rx="24" fill="#F0EEE6"/>
+  <path id="bird" fill="#B85C38" d="M 8 32 L 48 58 C 50 47 56 38 64 38 C 72 38 78 47 80 58 L 120 32 C 116 55 104 74 80 83 L 64 99 L 48 83 C 24 74 12 55 8 32 Z"/>
 </svg>
-
